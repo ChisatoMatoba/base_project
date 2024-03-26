@@ -1,61 +1,28 @@
 name: pr-agent
 
-permissions:
-  issues: write
-  pull-requests: write
-
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review, review_requested]
+    types: [opened, reopened, synchronize]
   issue_comment:
     types: [created, edited]
-  workflow_dispatch:
 
-concurrency:
-  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}-${{ github.event_name == 'pull_request_review_comment' && 'pr_comment' || 'pr' }}
-  cancel-in-progress: ${{ github.event_name != 'pull_request_review_comment' }}
+permissions:
+  pull-requests: write
+  issues: write
 
 jobs:
-  pr_agent_job:
+  pr_agent:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
-      contents: write
-    name: Run pr agent on every pull request
-
+    name: Run PR Agent
     if: ${{ github.event.sender.type != 'Bot' }}
-    env:
-      COMMON_INSTRUCTIONS: >-
-        - 日本語で回答してください
-        - 以下の原則に従ってコメントしてください。
-          - URLなどの構造化テキストを文字列結合で作ってはいけない。
-          - 置換でいじってはいけない。
-          - オブジェクトまたはライブラリを使ってください。
-          - 利用技術
-            - Next.js@13
-            - React@18
-            - Typescript@5.3
     steps:
-      - name: PR Agent action step
-        id: pragent
+      - id: pr-agent
         uses: Codium-ai/pr-agent@main
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTION.AUTO_REVIEW: true
-          GITHUB_ACTION.AUTO_IMPROVE: true
-
-          # レビュー総評コメントである "PR Feedback" への追加プロンプト
-          PR_REVIEWER.EXTRA_INSTRUCTIONS: ${{ env.COMMON_INSTRUCTIONS }}
-          # プルリクの要約 "PR Descrition" に関する追加プロンプト
-          PR_DESCRIPTION.EXTRA_INSTRUCTIONS: >-
-            日本語で回答してください。
-            タイトルは feat: 、chore: 、test: 、fix: 、ci: 、docs: などの
-            commitlint パターンの接頭辞を含む必要があります。
-          # /improve で呼び出す修正コードの "Suggestion" 時の追加プロンプト
-          PR_CODE_SUGGESTIONS.EXTRA_INSTRUCTIONS: ${{ env.COMMON_INSTRUCTIONS }}
-          # /improve コメントの後に提案されるコードの数。
-          PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 2
-          # Modelを変更
-          CONFIG.MODEL: gpt-3.5-turbo-0613
+          github_action.auto_describe: true
+          github_action.auto_review:   true
+          github_action.auto_improve:  false
+          PR_REVIEWER.EXTRA_INSTRUCTIONS: 'Please use Japanese in descriptions.'
+          PR_DESCRIPTION.EXTRA_INSTRUCTIONS: 'Please use Japanese in descriptions. Titles should have prefix of commitlint pattern such as `feat:`, `chore:`, `test:`, `fix:`, `ci:`, `docs:` etc'

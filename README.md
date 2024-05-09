@@ -1,24 +1,14 @@
-# README
+新しいプロジェクト用のリモートリポジトリを作成してから以下を実行
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+```
+# 元のリポジトリをベアクローン
+% git clone --bare https://github.com/ChisatoMatoba/base_project.git
 
-Things you may want to cover:
+# 元のリポジトリ情報をミラープッシュ
+% cd base_project.git
+% git push --mirror git@github.com:ユーザー名/コピー先.git  
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+# 元のリポジトリ情報を削除
+% cd ..
+% rm -rf base_project.git
+```
